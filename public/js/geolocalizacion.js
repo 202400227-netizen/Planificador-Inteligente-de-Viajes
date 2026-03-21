@@ -1,4 +1,4 @@
 async function obtenerUbicacionInicial() {
-    const response = await fetch('http://localhost:3000/api/geolocalizacion');
+    const response = await fetch('/api/geo'); // Ruta relativa
     return await response.json();
 }

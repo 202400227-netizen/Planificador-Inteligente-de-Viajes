@@ -2,25 +2,34 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>SafeRoute</title>
+    <title>SafeRoute - Viajes</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    
-    <input type="text" id="input-destino" placeholder="Ciudad destino...">
-    <button onclick="planificarViaje()">Buscar</button>
+    <h1>SafeRoute 🚗</h1>
+    <div class="buscador">
+        <input type="text" id="input-destino" placeholder="Escribe tu destino...">
+        <button onclick="planificarViaje()">Planificar</button>
+    </div>
 
-    <div id="mapa" style="height: 400px; width: 100%;"></div>
-    <div id="resultados"></div>
+    <div class="contenedor">
+        <div id="clima-info" class="card"><h3>Clima</h3></div>
+        <div id="noticias-info" class="card"><h3>Noticias</h3></div>
+        <div id="videos-info" class="card"><h3>Videos</h3></div>
+        <div class="card">
+            <h3>Mapa</h3>
+            <div id="mapa" style="height:200px; background:#ddd;"></div>
+        </div>
+        <div class="card">
+            <h3>Historial</h3>
+            <ul id="historial"></ul>
+        </div>
+    </div>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=TU_KEY"></script>
-
-    <script src="js/geolocalizacion.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2HI4PRKa9Jrr1HLtTgUQ9eyzn0WQEHLo"></script>
     <script src="js/clima.js"></script>
-    <script src="js/mapas.js"></script>
     <script src="js/noticias.js"></script>
     <script src="js/youtube.js"></script>
-
     <script src="js/index.js"></script>
 </body>
 </html>
