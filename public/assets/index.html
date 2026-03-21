@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SafeRoute</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    
+    <input type="text" id="input-destino" placeholder="Ciudad destino...">
+    <button onclick="planificarViaje()">Buscar</button>
+
+    <div id="mapa" style="height: 400px; width: 100%;"></div>
+    <div id="resultados"></div>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=TU_KEY"></script>
+
+    <script src="js/geolocalizacion.js"></script>
+    <script src="js/clima.js"></script>
+    <script src="js/mapas.js"></script>
+    <script src="js/noticias.js"></script>
+    <script src="js/youtube.js"></script>
+
+    <script src="js/index.js"></script>
+</body>
+</html>
