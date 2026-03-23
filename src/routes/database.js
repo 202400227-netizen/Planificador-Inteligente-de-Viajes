@@ -1,20 +1,16 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-// Esto creará el archivo saferoute.db en la raíz del proyecto
-// ../../ sube dos niveles: de 'routes' a 'src' y de 'src' a la raíz.
-const dbPath = path.resolve(__dirname, '../../saferoute.db'); 
+// Esto crea el archivo EXACTAMENTE en la carpeta principal de tu proyecto
+const dbPath = path.join(process.cwd(), 'saferoute.db'); 
 
 const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error("❌ Error al abrir la base de datos SQLite:", err.message);
-    } else {
-        console.log("✅ Base de datos SQLite conectada correctamente.");
-    }
+    if (err) console.error("Error:", err.message);
+    else console.log("✅ Conectado en:", dbPath);
 });
 
 db.serialize(() => {
-    // Creamos la tabla con los campos exactos que usa tu server.js e index.js
+    // ESTO CREA LA TABLA FÍSICAMENTE
     db.run(`CREATE TABLE IF NOT EXISTS itinerarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre_viaje TEXT,
@@ -22,11 +18,7 @@ db.serialize(() => {
         destino TEXT,
         clima_temp REAL,
         fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`, (err) => {
-        if (err) {
-            console.error("❌ Error al crear la tabla 'itinerarios':", err.message);
-        }
-    });
+    )`);
 });
 
 module.exports = db;

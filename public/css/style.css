@@ -1,98 +1,187 @@
-/* General */
+/* --- General --- */
 body {
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #f0f2f5;
-    color: #1c1e21;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f4f7f9;
+    color: #2d3436;
     margin: 0;
     padding: 20px;
+    line-height: 1.6;
 }
 
 h1 {
     text-align: center;
-    color: #0747a6;
+    color: #0984e3;
+    font-size: 2.5rem;
     margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
-/* Buscador */
+/* --- Buscador --- */
 .buscador {
     display: flex;
     justify-content: center;
-    gap: 10px;
-    margin-bottom: 40px;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 50px;
+    background: white;
+    padding: 20px;
+    border-radius: 50px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 input {
-    padding: 12px;
-    width: 350px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
+    padding: 15px 20px;
+    width: 100%;
+    border: 2px solid #e1e8ed;
+    border-radius: 30px;
     outline: none;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: #0984e3;
 }
 
 button {
-    padding: 12px 25px;
-    background-color: #007bff;
+    padding: 15px 30px;
+    background-color: #0984e3;
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 30px;
     cursor: pointer;
     font-weight: bold;
-    transition: 0.3s;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    white-space: nowrap;
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #74b9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(9, 132, 227, 0.3);
 }
 
-/* Contenedor de Tarjetas */
+/* --- Contenedor de Tarjetas (Grid) --- */
 .contenedor {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    max-width: 1200px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+    max-width: 1300px;
     margin: 0 auto;
 }
 
 .card {
     background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    border-top: 5px solid #007bff;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    border-top: 6px solid #0984e3;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
 }
 
 .card h3 {
     margin-top: 0;
-    color: #333;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
+    font-size: 1.3rem;
+    color: #2d3436;
+    border-bottom: 2px solid #f1f2f6;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-/* Estilo de la Lista de Historial (SQLite) */
+/* --- Estilos específicos para Clima y Noticias --- */
+#clima-info p {
+    font-size: 1.1rem;
+    margin: 10px 0;
+}
+
+.noticia-card {
+    background: #fdfdfd;
+    border-left: 3px solid #00cec9;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+.noticia-card a {
+    color: #0984e3;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.noticia-card a:hover {
+    text-decoration: underline;
+}
+
+/* --- Historial (SQLite) --- */
 #historial {
     list-style: none;
     padding: 0;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 #historial li {
     background: #f8f9fa;
-    margin-bottom: 10px;
-    padding: 12px;
-    border-radius: 6px;
+    margin-bottom: 12px;
+    padding: 15px;
+    border-radius: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid #e9ecef;
+    border: 1px solid #edf2f7;
+    transition: background 0.2s;
+}
+
+#historial li:hover {
+    background: #eef2f7;
+}
+
+#historial li strong {
+    color: #2d3436;
 }
 
 #historial li button {
-    padding: 5px 10px;
-    background-color: #dc3545;
-    font-size: 12px;
+    padding: 6px 12px;
+    background-color: #ff7675;
+    font-size: 0.8rem;
+    border-radius: 8px;
 }
 
-/* Responsivo para el mapa */
+#historial li button:hover {
+    background-color: #d63031;
+}
+
+/* --- Mapa y Videos --- */
 #mapa {
-    border: 1px solid #ccc;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #dfe6e9;
+}
+
+.video-container {
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Scrollbar Personalizada para el historial */
+#historial::-webkit-scrollbar {
+    width: 6px;
+}
+#historial::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
 }

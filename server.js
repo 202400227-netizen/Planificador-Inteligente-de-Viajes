@@ -117,5 +117,5 @@ app.delete('/api/itinerarios/:id', (req, res) => {
 // ==========================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor SafeRoute corriendo en http://localhost:${PORT}`);
+    console.log(`Servidor SafeRoute corriendo en http://localhost:${PORT}`);
 });

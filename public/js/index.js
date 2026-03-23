@@ -11,8 +11,7 @@ async function planificarViaje() {
     try {
         console.log(`Buscando información para: ${ciudad}...`);
 
-        // 1. LLAMADA A TUS FUNCIONES EXTERNAS (clima.js, noticias.js, youtube.js)
-        // Usamos Promise.all para que todas las peticiones se hagan al mismo tiempo (más rápido)
+        // 1. LLAMADA A TUS FUNCIONES EXTERNAS
         const [datosClima, datosNoticias, datosVideos] = await Promise.all([
             obtenerClima(ciudad),
             obtenerNoticias(ciudad),
@@ -22,10 +21,12 @@ async function planificarViaje() {
         // 2. MOSTRAR CLIMA EN EL HTML
         const climaDiv = document.getElementById('clima-info');
         if (climaDiv) {
+            // CORRECCIÓN: La descripción en OpenWeather está dentro de un array
+            const descripcion = datosClima.weather.description;
             climaDiv.innerHTML = `
                 <h3>🌤️ Clima en ${ciudad}</h3>
                 <p><strong>Temperatura:</strong> ${datosClima.main.temp}°C</p>
-                <p><strong>Estado:</strong> ${datosClima.weather.description}</p>
+                <p><strong>Estado:</strong> ${descripcion}</p>
                 <p><strong>Humedad:</strong> ${datosClima.main.humidity}%</p>
             `;
         }
@@ -46,7 +47,7 @@ async function planificarViaje() {
         const videosDiv = document.getElementById('videos-info');
         if (videosDiv) {
             const listaVideos = datosVideos.items.map(vid => `
-                <div class="video-container">
+                <div class="video-container" style="margin-bottom: 10px;">
                     <iframe width="100%" height="200" 
                         src="https://www.youtube.com/embed/${vid.id.videoId}" 
                         frameborder="0" allowfullscreen>
@@ -56,12 +57,17 @@ async function planificarViaje() {
             videosDiv.innerHTML = `<h3>🎥 Videos de YouTube</h3>${listaVideos}`;
         }
 
-        // 5. GUARDAR EN LA BASE DE DATOS (MÉTODO POST)
+        // 5. INICIALIZAR MAPA (Usando las coordenadas de la API de Clima)
+        if (typeof inicializarMapa === "function" && datosClima.coord) {
+            inicializarMapa(datosClima.coord.lat, datosClima.coord.lon);
+        }
+
+        // 6. GUARDAR EN LA BASE DE DATOS
         await guardarEnBaseDeDatos(ciudad, datosClima.main.temp);
 
     } catch (error) {
         console.error("Error en la planificación:", error);
-        alert("No se pudo obtener la información. Revisa que el servidor esté corriendo.");
+        alert("No se pudo obtener la información. Revisa la consola y el servidor.");
     }
 }
 
@@ -81,11 +87,9 @@ async function guardarEnBaseDeDatos(destino, temp) {
             body: JSON.stringify(datosParaGuardar)
         });
         const resultado = await res.json();
-        console.log("Guardado en DB:", resultado.mensaje);
+        console.log("Respuesta servidor:", resultado);
         
-        // Refrescamos la lista de viajes guardados (si tienes la función)
-        if (typeof cargarHistorial === "function") cargarHistorial();
-        
+        cargarHistorial(); 
     } catch (err) {
         console.error("Error al guardar en DB:", err);
     }
@@ -100,9 +104,9 @@ async function cargarHistorial() {
         
         if (historialUl) {
             historialUl.innerHTML = viajes.map(v => `
-                <li>
-                    <strong>${v.destino}</strong> (${v.clima_temp}°C)
-                    <button onclick="eliminarViaje(${v.id})">❌</button>
+                <li style="display: flex; justify-content: space-between; margin-bottom: 5px; background: #f4f4f4; padding: 8px; border-radius: 4px;">
+                    <span><strong>${v.destino}</strong> (${v.clima_temp}°C)</span>
+                    <button onclick="eliminarViaje(${v.id})" style="background:red; color:white; border:none; border-radius:3px; cursor:pointer;">Eliminar</button>
                 </li>
             `).join('');
         }
@@ -121,5 +125,4 @@ async function eliminarViaje(id) {
 // Ejecutar al cargar la página
 window.onload = () => {
     cargarHistorial();
-    // Opcional: obtenerUbicacionInicial() si quieres geo al inicio
 };
