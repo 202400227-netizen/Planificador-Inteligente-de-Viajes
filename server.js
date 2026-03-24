@@ -1,20 +1,23 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-// Ajustamos la ruta según tu imagen: database.js está en src/routes/
+const path = require('path');
+// Importamos la conexión a la base de datos
 const db = require('./src/routes/database'); 
 require('dotenv').config();
 
 const app = express();
+
+// Middlewares
 app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
+app.use(express.json()); // Vital para que el POST y PUT funcionen (recibir JSON)
+app.use(express.static('public')); // Para servir tu HTML, CSS y JS
 
 // ==========================================
-// 1. CONSUMO DE APIS EXTERNAS (INTERMEDIARIO)
+// 1. CONSUMO DE APIS EXTERNAS (MÉTODO GET)
 // ==========================================
 
-// --- GEOLOCALIZACIÓN (ipstack) ---
+// GEOLOCALIZACIÓN (ipstack)
 app.get('/api/geo', async (req, res) => {
     try {
         const response = await axios.get(`http://api.ipstack.com/check?access_key=${process.env.IPSTACK_KEY}`);
@@ -24,7 +27,7 @@ app.get('/api/geo', async (req, res) => {
     }
 });
 
-// --- CLIMA (OpenWeather) ---
+// CLIMA (OpenWeather)
 app.get('/api/clima', async (req, res) => {
     const { ciudad } = req.query;
     try {
@@ -35,7 +38,7 @@ app.get('/api/clima', async (req, res) => {
     }
 });
 
-// --- NOTICIAS (News API) ---
+// NOTICIAS (News API)
 app.get('/api/noticias', async (req, res) => {
     const { ciudad } = req.query;
     try {
@@ -46,7 +49,7 @@ app.get('/api/noticias', async (req, res) => {
     }
 });
 
-// --- VIDEOS (YouTube) ---
+// VIDEOS (YouTube)
 app.get('/api/videos', async (req, res) => {
     const { ciudad } = req.query;
     try {
@@ -57,25 +60,27 @@ app.get('/api/videos', async (req, res) => {
     }
 });
 
-// --- MAPAS (Para pasar la Key al Front) ---
-app.get('/api/maps-key', (req, res) => {
-    res.json({ key: process.env.GOOGLE_MAPS_KEY });
-});
-
 // ==========================================
 // 2. API REST PROPIA (CRUD EN SQLITE)
+// Implementa: GET, POST, PUT, DELETE
 // ==========================================
 
-// [GET] Recupera todos los viajes
+/**
+ * [MÉTODO GET] - Listar todos los itinerarios
+ * Propósito: Leer los datos guardados en SQLite.
+ */
 app.get('/api/itinerarios', (req, res) => {
-    const sql = "SELECT * FROM itinerarios ORDER BY id DESC"; // Cambié fecha_creacion por id si no tienes ese campo
+    const sql = "SELECT * FROM itinerarios ORDER BY id DESC";
     db.all(sql, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
 });
 
-// [POST] Crea un nuevo plan de viaje
+/**
+ * [MÉTODO POST] - Crear un nuevo itinerario
+ * Propósito: Guardar una nueva búsqueda en la base de datos.
+ */
 app.post('/api/itinerarios', (req, res) => {
     const { nombre_viaje, origen, destino, clima_temp } = req.body;
     const sql = `INSERT INTO itinerarios (nombre_viaje, origen, destino, clima_temp) VALUES (?, ?, ?, ?)`;
@@ -84,12 +89,16 @@ app.post('/api/itinerarios', (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         res.status(201).json({ 
             id: this.lastID, 
-            mensaje: "¡Viaje guardado con éxito!" 
+            mensaje: "¡Registro creado exitosamente!",
+            data: req.body 
         });
     });
 });
 
-// [PUT] Editar un viaje existente
+/**
+ * [MÉTODO PUT] - Actualizar un itinerario existente
+ * Propósito: Modificar el nombre o destino de un viaje usando su ID.
+ */
 app.put('/api/itinerarios/:id', (req, res) => {
     const { id } = req.params;
     const { nombre_viaje, destino } = req.body;
@@ -97,25 +106,42 @@ app.put('/api/itinerarios/:id', (req, res) => {
 
     db.run(sql, [nombre_viaje, destino, id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ mensaje: "Actualizado correctamente", cambios: this.changes });
+        if (this.changes === 0) return res.status(404).json({ mensaje: "Registro no encontrado" });
+        
+        res.json({ 
+            mensaje: "Registro actualizado correctamente", 
+            id_actualizado: id,
+            cambios: this.changes 
+        });
     });
 });
 
-// [DELETE] Eliminar un itinerario
+/**
+ * [MÉTODO DELETE] - Eliminar un itinerario
+ * Propósito: Borrar un registro de la base de datos permanentemente.
+ */
 app.delete('/api/itinerarios/:id', (req, res) => {
     const { id } = req.params;
     const sql = `DELETE FROM itinerarios WHERE id = ?`;
 
     db.run(sql, id, function(err) {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ mensaje: "Eliminado", borrados: this.changes });
+        res.json({ 
+            mensaje: "Registro eliminado con éxito", 
+            id_borrado: id,
+            borrados: this.changes 
+        });
     });
 });
 
-// ==========================================
-// INICIO DEL SERVIDOR
-// ==========================================
+// --- INICIO DEL SERVIDOR ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Servidor SafeRoute corriendo en http://localhost:${PORT}`);
+    console.log(`
+    ===================================================
+    🚀 Servidor SafeRoute corriendo en: http://localhost:${PORT}
+    📂 Base de datos cargada correctamente.
+    ✅ API REST Lista (GET, POST, PUT, DELETE).
+    ===================================================
+    `);
 });
