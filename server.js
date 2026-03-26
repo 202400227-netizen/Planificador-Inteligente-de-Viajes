@@ -87,16 +87,19 @@ app.get('/api/itinerarios', (req, res) => {
  * Propósito: Guardar una nueva búsqueda en la base de datos.
  */
 app.post('/api/itinerarios', (req, res) => {
+    // 👇 AGREGA ESTA LÍNEA EXACTAMENTE AQUÍ
+    console.log("📥 ¡Llegó una petición del navegador! Datos recibidos:", req.body); 
+
     const { nombre_viaje, origen, destino, clima_temp } = req.body;
     const sql = `INSERT INTO itinerarios (nombre_viaje, origen, destino, clima_temp) VALUES (?, ?, ?, ?)`;
     
     db.run(sql, [nombre_viaje, origen, destino, clima_temp], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ 
-            id: this.lastID, 
-            mensaje: "¡Registro creado exitosamente!",
-            data: req.body 
-        });
+        if (err) {
+            console.error("❌ Error guardando en DB:", err.message);
+            return res.status(500).json({ error: err.message });
+        }
+        console.log("✅ ¡Guardado exitoso en SQLite! ID:", this.lastID);
+        res.status(201).json({ id: this.lastID, mensaje: "¡Registro creado exitosamente!" });
     });
 });
 

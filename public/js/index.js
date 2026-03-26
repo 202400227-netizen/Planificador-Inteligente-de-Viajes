@@ -20,9 +20,9 @@ async function planificarViaje() {
 
         // 2. MOSTRAR CLIMA EN EL HTML
         const climaDiv = document.getElementById('clima-info');
-        if (climaDiv) {
-            // CORRECCIÓN: La descripción en OpenWeather está dentro de un array
-            const descripcion = datosClima.weather.description;
+        if (climaDiv && datosClima.weather && datosClima.main) {
+            // ✅ CORRECCIÓN APLICADA: Acceder al índice [0] del array
+            const descripcion = datosClima.weather[0].description;
             climaDiv.innerHTML = `
                 <h3>🌤️ Clima en ${ciudad}</h3>
                 <p><strong>Temperatura:</strong> ${datosClima.main.temp}°C</p>
@@ -33,7 +33,8 @@ async function planificarViaje() {
 
         // 3. MOSTRAR NOTICIAS EN EL HTML
         const noticiasDiv = document.getElementById('noticias-info');
-        if (noticiasDiv) {
+        // ✅ VALIDACIÓN: Asegurar que 'articles' existe antes de hacer .slice()
+        if (noticiasDiv && datosNoticias.articles) {
             const listaNoticias = datosNoticias.articles.slice(0, 3).map(art => `
                 <div class="noticia-card">
                     <p><strong>${art.title}</strong></p>
@@ -45,7 +46,8 @@ async function planificarViaje() {
 
         // 4. MOSTRAR VIDEOS EN EL HTML
         const videosDiv = document.getElementById('videos-info');
-        if (videosDiv) {
+        // ✅ VALIDACIÓN: Asegurar que 'items' existe antes de hacer .map()
+        if (videosDiv && datosVideos.items) {
             const listaVideos = datosVideos.items.map(vid => `
                 <div class="video-container" style="margin-bottom: 10px;">
                     <iframe width="100%" height="200" 
@@ -57,19 +59,27 @@ async function planificarViaje() {
             videosDiv.innerHTML = `<h3>🎥 Videos de YouTube</h3>${listaVideos}`;
         }
 
-        // 5. INICIALIZAR MAPA (Usando las coordenadas de la API de Clima)
+        // 5. INICIALIZAR MAPA
         if (typeof inicializarMapa === "function" && datosClima.coord) {
             inicializarMapa(datosClima.coord.lat, datosClima.coord.lon);
         }
 
+        // 👇 AGREGA ESTE MENSAJE PARA SABER SI SOBREVIVIMOS A LAS APIS
+        console.log("✅ Todas las APIs respondieron bien. Guardando en Base de Datos...");
+
         // 6. GUARDAR EN LA BASE DE DATOS
-        await guardarEnBaseDeDatos(ciudad, datosClima.main.temp);
+        if (datosClima.main && datosClima.main.temp) {
+            await guardarEnBaseDeDatos(ciudad, datosClima.main.temp);
+        }
 
     } catch (error) {
-        console.error("Error en la planificación:", error);
+        // 👇 AGREGA ESTO PARA SABER QUÉ API NOS ESTÁ SABOTEANDO
+        console.error("❌ Ocurrió un error en la ejecución:", error);
         alert("No se pudo obtener la información. Revisa la consola y el servidor.");
     }
+
 }
+
 
 // --- FUNCIÓN PARA GUARDAR EN SQLITE ---
 async function guardarEnBaseDeDatos(destino, temp) {
