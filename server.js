@@ -6,6 +6,11 @@ const path = require('path');
 const db = require('./src/routes/database'); 
 require('dotenv').config();
 
+// ==========================================
+// 👇 NUEVO: Importar las rutas de desastres
+// ==========================================
+const desastresRoutes = require('./api-desastres/routes/desastres');
+
 const app = express();
 
 // Middlewares
@@ -134,7 +139,20 @@ app.delete('/api/itinerarios/:id', (req, res) => {
     });
 });
 
-// --- INICIO DEL SERVIDOR ---
+// ==========================================
+// 👇 NUEVO: RUTAS PARA DESASTRES NATURALES
+// ==========================================
+
+// Usar las rutas de desastres
+app.use('/api/desastres', desastresRoutes);
+
+// Servir el archivo HTML estático de desastres
+app.use('/desastres', express.static('./api-desastres/public'));
+
+// ==========================================
+// INICIO DEL SERVIDOR
+// ==========================================
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`
@@ -142,6 +160,8 @@ app.listen(PORT, () => {
     🚀 Servidor SafeRoute corriendo en: http://localhost:${PORT}
     📂 Base de datos cargada correctamente.
     ✅ API REST Lista (GET, POST, PUT, DELETE).
+    🌊 API Desastres Naturales disponible en: http://localhost:${PORT}/api/desastres
+    🌐 Interfaz de desastres: http://localhost:${PORT}/desastres/desastres.html
     ===================================================
     `);
 });
