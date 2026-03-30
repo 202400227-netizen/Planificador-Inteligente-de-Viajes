@@ -74,7 +74,7 @@ async function planificarViaje() {
 
     } catch (error) {
         // 👇 AGREGA ESTO PARA SABER QUÉ API NOS ESTÁ SABOTEANDO
-        console.error("❌ Ocurrió un error en la ejecución:", error);
+        console.error("Ocurrió un error en la ejecución:", error);
         alert("No se pudo obtener la información. Revisa la consola y el servidor.");
     }
 
