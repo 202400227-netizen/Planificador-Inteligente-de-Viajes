@@ -7,19 +7,21 @@ const db = require('./src/routes/database');
 require('dotenv').config();
 
 // ==========================================
-// 👇 NUEVO: Importar las rutas de desastres
+// 🔌 IMPORTACIÓN DE RUTAS
 // ==========================================
+// Ruta de la API de desastres (según tu estructura de carpetas)
 const desastresRoutes = require('./api-desastres/routes/desastres');
 
 const app = express();
 
-// Middlewares
+// --- Middlewares ---
 app.use(cors());
-app.use(express.json()); // Vital para que el POST y PUT funcionen (recibir JSON)
-app.use(express.static('public')); // Para servir tu HTML, CSS y JS
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public')); // Sirve index.html y archivos principales
 
 // ==========================================
-// 1. CONSUMO DE APIS EXTERNAS (MÉTODO GET)
+// 1. CONSUMO DE APIS EXTERNAS
 // ==========================================
 
 // GEOLOCALIZACIÓN (ipstack)
@@ -66,14 +68,9 @@ app.get('/api/videos', async (req, res) => {
 });
 
 // ==========================================
-// 2. API REST PROPIA (CRUD EN SQLITE)
-// Implementa: GET, POST, PUT, DELETE
+// 2. API REST PROPIA (ITINERARIOS - SQLITE)
 // ==========================================
 
-/**
- * [MÉTODO GET] - Listar todos los itinerarios
- * Propósito: Leer los datos guardados en SQLite.
- */
 app.get('/api/itinerarios', (req, res) => {
     const sql = "SELECT * FROM itinerarios ORDER BY id DESC";
     db.all(sql, [], (err, rows) => {
@@ -82,89 +79,60 @@ app.get('/api/itinerarios', (req, res) => {
     });
 });
 
-/**
- * [MÉTODO POST] - Crear un nuevo itinerario
- * Propósito: Guardar una nueva búsqueda en la base de datos.
- */
 app.post('/api/itinerarios', (req, res) => {
-    // 👇 AGREGA ESTA LÍNEA EXACTAMENTE AQUÍ
-    console.log("📥 ¡Llegó una petición del navegador! Datos recibidos:", req.body); 
-
+    console.log("📥 Datos recibidos:", req.body); 
     const { nombre_viaje, origen, destino, clima_temp } = req.body;
     const sql = `INSERT INTO itinerarios (nombre_viaje, origen, destino, clima_temp) VALUES (?, ?, ?, ?)`;
     
     db.run(sql, [nombre_viaje, origen, destino, clima_temp], function(err) {
-        if (err) {
-            console.error("❌ Error guardando en DB:", err.message);
-            return res.status(500).json({ error: err.message });
-        }
-        console.log("✅ ¡Guardado exitoso en SQLite! ID:", this.lastID);
-        res.status(201).json({ id: this.lastID, mensaje: "¡Registro creado exitosamente!" });
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ id: this.lastID, mensaje: "¡Registro creado!" });
     });
 });
 
-/**
- * [MÉTODO PUT] - Actualizar un itinerario existente
- * Propósito: Modificar el nombre o destino de un viaje usando su ID.
- */
 app.put('/api/itinerarios/:id', (req, res) => {
     const { id } = req.params;
     const { nombre_viaje, destino } = req.body;
     const sql = `UPDATE itinerarios SET nombre_viaje = ?, destino = ? WHERE id = ?`;
-
     db.run(sql, [nombre_viaje, destino, id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
-        if (this.changes === 0) return res.status(404).json({ mensaje: "Registro no encontrado" });
-        
-        res.json({ 
-            mensaje: "Registro actualizado correctamente", 
-            id_actualizado: id,
-            cambios: this.changes 
-        });
+        res.json({ mensaje: "Actualizado correctamente", id });
     });
 });
 
-/**
- * [MÉTODO DELETE] - Eliminar un itinerario
- * Propósito: Borrar un registro de la base de datos permanentemente.
- */
 app.delete('/api/itinerarios/:id', (req, res) => {
     const { id } = req.params;
     const sql = `DELETE FROM itinerarios WHERE id = ?`;
-
     db.run(sql, id, function(err) {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ 
-            mensaje: "Registro eliminado con éxito", 
-            id_borrado: id,
-            borrados: this.changes 
-        });
+        res.json({ mensaje: "Eliminado con éxito", id_borrado: id });
     });
 });
 
 // ==========================================
-// 👇 NUEVO: RUTAS PARA DESASTRES NATURALES
+// 🌊 3. CONEXIÓN API DESASTRES (COMPAÑERO)
 // ==========================================
 
-// Usar las rutas de desastres
+// Endpoints de la API
 app.use('/api/desastres', desastresRoutes);
 
-// Servir el archivo HTML estático de desastres
-app.use('/desastres', express.static('./api-desastres/public'));
+// Servir la interfaz de desastres (HTML secundario)
+// Nota: Accederás vía http://localhost:3000/desastres/desastres.html
+app.use('/desastres', express.static(path.join(__dirname, 'api-desastres/public')));
+
 
 // ==========================================
-// INICIO DEL SERVIDOR
+// 🚀 INICIO DEL SERVIDOR
 // ==========================================
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`
     ===================================================
-    🚀 Servidor SafeRoute corriendo en: http://localhost:${PORT}
-    📂 Base de datos cargada correctamente.
-    ✅ API REST Lista (GET, POST, PUT, DELETE).
-    🌊 API Desastres Naturales disponible en: http://localhost:${PORT}/api/desastres
-    🌐 Interfaz de desastres: http://localhost:${PORT}/desastres/desastres.html
+    ✅ SERVIDOR XOLOGUÍA / SAFEROUTE ACTIVO
+    🌍 URL: http://localhost:${PORT}
+    🌊 API DESASTRES: http://localhost:${PORT}/api/desastres
+    📂 DB SQLITE: Conectada
     ===================================================
     `);
 });
