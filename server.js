@@ -2,29 +2,23 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
-// Importamos la conexión a la base de datos
 const db = require('./src/routes/database'); 
 require('dotenv').config();
 
-// ==========================================
-// 🔌 IMPORTACIÓN DE RUTAS
-// ==========================================
-// Ruta de la API de desastres (según tu estructura de carpetas)
 const desastresRoutes = require('./api-desastres/routes/desastres');
 
 const app = express();
 
-// --- Middlewares ---
 app.use(cors());
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public')); // Sirve index.html y archivos principales
+app.use(express.static('public'));
 
 // ==========================================
-// 1. CONSUMO DE APIS EXTERNAS
+// 1. CONSUMO DE APIS EXTERNAS (LAS 5 APIS)
 // ==========================================
 
-// GEOLOCALIZACIÓN (ipstack)
+// 1. GEOLOCALIZACIÓN (ipstack)
 app.get('/api/geo', async (req, res) => {
     try {
         const response = await axios.get(`http://api.ipstack.com/check?access_key=${process.env.IPSTACK_KEY}`);
@@ -34,7 +28,7 @@ app.get('/api/geo', async (req, res) => {
     }
 });
 
-// CLIMA (OpenWeather)
+// 2. CLIMA (OpenWeather)
 app.get('/api/clima', async (req, res) => {
     const { ciudad } = req.query;
     try {
@@ -45,25 +39,38 @@ app.get('/api/clima', async (req, res) => {
     }
 });
 
-// NOTICIAS (News API)
+// 3. NOTICIAS (News API) - Limitado a 1 mes de antigüedad máximo (Gratis)
 app.get('/api/noticias', async (req, res) => {
     const { ciudad } = req.query;
     try {
-        const response = await axios.get(`https://newsapi.org/v2/everything?q=${ciudad}&apiKey=${process.env.NEWS_KEY}&pageSize=3&language=es`);
+        // Se agregó sortBy=publishedAt para traer las más recientes
+        const response = await axios.get(`https://newsapi.org/v2/everything?q=${ciudad}&apiKey=${process.env.NEWS_KEY}&pageSize=3&language=es&sortBy=publishedAt`);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Error en News API" });
     }
 });
 
-// VIDEOS (YouTube)
+// 4. VIDEOS (YouTube)
 app.get('/api/videos', async (req, res) => {
     const { ciudad } = req.query;
     try {
-        const response = await axios.get(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=viajar a ${ciudad}&key=${process.env.YOUTUBE_KEY}&maxResults=3&type=video`);
+        // Se agregó videoEmbeddable=true para evitar videos bloqueados
+        const response = await axios.get(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=viajar a ${ciudad}&key=${process.env.YOUTUBE_KEY}&maxResults=3&type=video&videoEmbeddable=true`);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Error en YouTube API" });
+    }
+});
+
+// 5. MAPAS (Google Geocoding) - NUEVA API
+app.get('/api/coordenadas', async (req, res) => {
+    const { ciudad } = req.query;
+    try {
+        const response = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${ciudad}&key=${process.env.GOOGLE_MAPS_KEY}`);
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Error en Google Maps API" });
     }
 });
 
@@ -79,14 +86,21 @@ app.get('/api/itinerarios', (req, res) => {
     });
 });
 
+// Ejemplo de cómo debe quedar tu ruta POST en server.js
 app.post('/api/itinerarios', (req, res) => {
-    console.log("📥 Datos recibidos:", req.body); 
     const { nombre_viaje, origen, destino, clima_temp } = req.body;
-    const sql = `INSERT INTO itinerarios (nombre_viaje, origen, destino, clima_temp) VALUES (?, ?, ?, ?)`;
-    
+
+    // EL TRUCO ESTÁ AQUÍ: usamos datetime('now', 'localtime') para arreglar la hora
+    const sql = `INSERT INTO itinerarios (nombre_viaje, origen, destino, clima_temp, fecha_registro) 
+                 VALUES (?, ?, ?, ?, datetime('now', 'localtime'))`;
+
     db.run(sql, [nombre_viaje, origen, destino, clima_temp], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id: this.lastID, mensaje: "¡Registro creado!" });
+        if (err) {
+            console.error(err.message);
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json({ id: this.lastID });
     });
 });
 
@@ -110,29 +124,12 @@ app.delete('/api/itinerarios/:id', (req, res) => {
 });
 
 // ==========================================
-// 🌊 3. CONEXIÓN API DESASTRES (COMPAÑERO)
+// 3. CONEXIÓN API DESASTRES
 // ==========================================
-
-// Endpoints de la API
 app.use('/api/desastres', desastresRoutes);
-
-// Servir la interfaz de desastres (HTML secundario)
-// Nota: Accederás vía http://localhost:3000/desastres/desastres.html
 app.use('/desastres', express.static(path.join(__dirname, 'api-desastres/public')));
-
-
-// ==========================================
-// 🚀 INICIO DEL SERVIDOR
-// ==========================================
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`
-    ===================================================
-    ✅ SERVIDOR XOLOGUÍA / SAFEROUTE ACTIVO
-    🌍 URL: http://localhost:${PORT}
-    🌊 API DESASTRES: http://localhost:${PORT}/api/desastres
-    📂 DB SQLITE: Conectada
-    ===================================================
-    `);
+    console.log(`URL: http://localhost:${PORT}`);
 });

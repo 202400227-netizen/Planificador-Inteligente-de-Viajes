@@ -12,7 +12,9 @@ const DesastresModel = {
     },
     getEstadoById: (id) => {
         return new Promise((resolve, reject) => {
-            db.get('SELECT * FROM estados WHERE id = ? OR clave = ?', [id, id], (err, row) => {
+            // Se actualiza por si en algún momento buscas directamente un estado por nombre o capital aquí
+            db.get('SELECT * FROM estados WHERE id = ? OR clave = ? OR nombre LIKE ? OR capital LIKE ?', 
+            [id, id, `%${id}%`, `%${id}%`], (err, row) => {
                 if (err) reject(err);
                 resolve(row);
             });
@@ -57,7 +59,7 @@ const DesastresModel = {
     getAllAlertas: (estado = null) => {
         return new Promise((resolve, reject) => {
             let query = `
-                SELECT a.*, e.nombre as estado_nombre, e.clave, t.nombre as tipo_desastre, t.icono
+                SELECT a.*, e.nombre as estado_nombre, e.capital, e.clave, t.nombre as tipo_desastre, t.icono
                 FROM alertas_activas a
                 JOIN estados e ON a.estado_id = e.id
                 JOIN tipos_desastre t ON a.tipo_desastre_id = t.id
@@ -66,8 +68,9 @@ const DesastresModel = {
             let params = [];
             
             if (estado) {
-                query += ` AND (e.clave = ? OR e.nombre LIKE ?)`;
-                params = [estado, `%${estado}%`];
+                // AQUI ESTÁ LA MAGIA: Agregamos la búsqueda por capital
+                query += ` AND (e.clave = ? OR e.nombre LIKE ? OR e.capital LIKE ?)`;
+                params = [estado, `%${estado}%`, `%${estado}%`];
             }
             
             db.all(query, params, (err, rows) => {
@@ -79,7 +82,7 @@ const DesastresModel = {
     getAllHistorial: (estado = null) => {
         return new Promise((resolve, reject) => {
             let query = `
-                SELECT h.*, e.nombre as estado_nombre, e.clave, t.nombre as tipo_desastre, t.icono
+                SELECT h.*, e.nombre as estado_nombre, e.capital, e.clave, t.nombre as tipo_desastre, t.icono
                 FROM historial_desastres h
                 JOIN estados e ON h.estado_id = e.id
                 JOIN tipos_desastre t ON h.tipo_desastre_id = t.id
@@ -88,15 +91,16 @@ const DesastresModel = {
             let params = [];
             
             if (estado) {
+                // AQUI TAMBIÉN: Agregamos la búsqueda por capital
                 query = `
-                    SELECT h.*, e.nombre as estado_nombre, e.clave, t.nombre as tipo_desastre, t.icono
+                    SELECT h.*, e.nombre as estado_nombre, e.capital, e.clave, t.nombre as tipo_desastre, t.icono
                     FROM historial_desastres h
                     JOIN estados e ON h.estado_id = e.id
                     JOIN tipos_desastre t ON h.tipo_desastre_id = t.id
-                    WHERE e.clave = ? OR e.nombre LIKE ?
+                    WHERE e.clave = ? OR e.nombre LIKE ? OR e.capital LIKE ?
                     ORDER BY h.fecha DESC
                 `;
-                params = [estado, `%${estado}%`];
+                params = [estado, `%${estado}%`, `%${estado}%`];
             }
             
             db.all(query, params, (err, rows) => {
