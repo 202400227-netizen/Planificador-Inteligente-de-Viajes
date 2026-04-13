@@ -29,7 +29,12 @@ async function planificarViaje() {
         }
 
         // 2. ALERTAS DE DESASTRES
-        await buscarDesastres(ciudadDestino);
+try {
+    await buscarDesastres(ciudadDestino);
+} catch (error) {
+    console.warn("El módulo de desastres falló, pero continuamos:", error);
+    document.getElementById('lista-alertas').innerHTML = "<p class='texto-vacio'>No se pudieron cargar las alertas.</p>";
+}
 
         // 3. LLAMADAS A LAS APIs RESTANTES
         const [climaDestinoRes, noticiasRes, videosRes, climaOrigenRes] = await Promise.allSettled([
