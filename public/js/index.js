@@ -28,13 +28,16 @@ async function planificarViaje() {
             console.log("No se pudo detectar la ubicación de origen.");
         }
 
-        // 2. ALERTAS DE DESASTRES
-try {
-    await buscarDesastres(ciudadDestino);
-} catch (error) {
-    console.warn("El módulo de desastres falló, pero continuamos:", error);
-    document.getElementById('lista-alertas').innerHTML = "<p class='texto-vacio'>No se pudieron cargar las alertas.</p>";
-}
+        // 2. ALERTAS DE DESASTRES (CORREGIDO)
+        // Asegúrate de que en tu archivo desastres.js la función se llame buscarDesastres
+        try {
+            const listaAlertas = document.getElementById('lista-alertas');
+            listaAlertas.innerHTML = "<p>Buscando alertas...</p>";
+            await buscarDesastres(ciudadDestino); 
+        } catch (error) {
+            console.error("Error en el módulo de desastres:", error);
+            document.getElementById('lista-alertas').innerHTML = "<p class='texto-vacio'>No se pudieron cargar las alertas.</p>";
+        }
 
         // 3. LLAMADAS A LAS APIs RESTANTES
         const [climaDestinoRes, noticiasRes, videosRes, climaOrigenRes] = await Promise.allSettled([
@@ -50,7 +53,7 @@ try {
         
         if (climaDestinoRes.status === 'fulfilled' && climaDestinoRes.value.main) {
             tempDestino = climaDestinoRes.value.main.temp;
-            const descripcion = climaDestinoRes.value.weather[0].description;
+            const descripcion = climaDestinoRes.value.weather.description;
             
             let htmlClima = `
                 <p><strong>Temperatura:</strong> ${tempDestino}°C</p>
@@ -58,7 +61,7 @@ try {
                 <p><strong>Humedad:</strong> ${climaDestinoRes.value.main.humidity}%</p>
             `;
 
-            if (climaOrigenRes && climaOrigenRes.status === 'fulfilled' && climaOrigenRes.value.main) {
+            if (climaOrigenRes && climaOrigenRes.status === 'fulfilled' && climaOrigenRes.value && climaOrigenRes.value.main) {
                 const tempOrigen = climaOrigenRes.value.main.temp;
                 const diferencia = tempDestino - tempOrigen;
                 
@@ -166,13 +169,22 @@ async function cargarHistorial() {
 
         listaHistorial.innerHTML = "";
 
-        if (itinerarios.length === 0) {
+        if (!Array.isArray(itinerarios) || itinerarios.length === 0) {
             listaHistorial.innerHTML = "<p class='texto-vacio'>El historial está vacío.</p>";
             return;
         }
 
         itinerarios.forEach(viaje => {
             const li = document.createElement('li');
+            li.style.display = "flex";
+            li.style.justifyContent = "space-between";
+            li.style.alignItems = "center";
+            li.style.marginBottom = "10px";
+            li.style.padding = "10px";
+            li.style.background = "#fff";
+            li.style.borderRadius = "8px";
+            li.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
+
             li.innerHTML = `
                 <div style="flex-grow: 1;">
                     <strong style="color: #3B5960;">${viaje.nombre_viaje}</strong><br>

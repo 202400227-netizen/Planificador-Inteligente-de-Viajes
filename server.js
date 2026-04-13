@@ -127,7 +127,7 @@ app.delete('/api/itinerarios/:id', (req, res) => {
 // 3. CONEXIÓN API DESASTRES
 // ==========================================
 app.use('/api/desastres', desastresRoutes);
-app.use('/desastres', express.static(path.join(__dirname, 'api-desastres/public')));
+app.use('/api-desastres', express.static(path.join(__dirname, 'api-desastres', 'public')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
