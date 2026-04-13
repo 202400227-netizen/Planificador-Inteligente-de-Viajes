@@ -142,17 +142,24 @@ button:hover {
 
 /* --- Tarjeta de Mapa (corrección de desborde) --- */
 .card-mapa {
-    overflow: hidden;  /* Evita que el contenido interno se salga */
+    /* Eliminamos cualquier overflow: hidden que pueda recortar */
 }
 
 #mapa {
     width: 100%;
-    min-height: 350px;  /* Altura base agradable */
-    height: auto;
+    height: 250px; /* Altura fija para asegurar visibilidad */
+    min-height: 250px;
     border-radius: 12px;
-    background-color: #EAE5D9; /* Color de carga antes del mapa */
-    margin-top: auto;
-    object-fit: cover; /* Por si acaso hay imágenes dentro */
+    background-color: #EAE5D9;
+    margin-top: 0; /* Anulamos cualquier margen automático */
+    flex-shrink: 0; /* Evita que se encoja */
+}
+
+/* Para el iframe de Google Maps dentro de #mapa */
+#mapa iframe {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 12px;
 }
 
 /* --- Tarjeta de Historial (más espaciosa) --- */
@@ -252,4 +259,34 @@ button:hover {
     #mapa {
         min-height: 280px;
     }
+}
+
+/* Forzar que el contenedor del mapa ocupe todo el espacio disponible */
+.card-mapa {
+    display: flex;
+    flex-direction: column;
+    padding: 20px !important;
+}
+
+.card-mapa h3 {
+    flex-shrink: 0;
+}
+
+#mapa {
+    flex: 1;                   /* Ocupa el espacio restante */
+    min-height: 250px;
+    width: 100%;
+    border-radius: 12px;
+    background: #EAE5D9;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+/* Si dentro hay un iframe (Google Maps) */
+#mapa iframe {
+    width: 100% !important;
+    height: 100% !important;
+    border: none;
+    border-radius: 12px;
 }

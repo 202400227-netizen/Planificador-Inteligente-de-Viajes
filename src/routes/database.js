@@ -14,7 +14,7 @@ db.serialize(() => {
         fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Tablas de Desastres (Aquí está agregada la columna 'capital')
+    // Tablas de Desastres
     db.run(`CREATE TABLE IF NOT EXISTS estados (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre TEXT NOT NULL, 
@@ -36,12 +36,11 @@ db.serialize(() => {
         FOREIGN KEY(tipo_desastre_id) REFERENCES tipos_desastre(id)
     )`);
 
-    // --- SECCIÓN DE DATOS DE PRUEBA (LOS 32 ESTADOS) ---
+    // Insertar los 32 estados si no existen
     db.get("SELECT COUNT(*) as count FROM estados", (err, row) => {
         if (row.count === 0) {
-            console.log("Insertando los 32 estados de prueba...");
+            console.log("Insertando los 32 estados de México...");
             const stmt = db.prepare("INSERT INTO estados (nombre, capital, clave, region) VALUES (?, ?, ?, ?)");
-            
             const estadosMexico = [
                 { n: "Aguascalientes", c: "Aguascalientes", cl: "AGS", r: "Centro" },
                 { n: "Baja California", c: "Mexicali", cl: "BC", r: "Norte" },
@@ -76,13 +75,123 @@ db.serialize(() => {
                 { n: "Yucatán", c: "Mérida", cl: "YUC", r: "Sureste" },
                 { n: "Zacatecas", c: "Zacatecas", cl: "ZAC", r: "Centro" }
             ];
-
             estadosMexico.forEach(est => stmt.run(est.n, est.c, est.cl, est.r));
-            stmt.finalize();
+            stmt.finalize(() => {
+                console.log("Estados insertados.");
+                insertarTiposDesastre();
+            });
+        } else {
+            insertarTiposDesastre();
         }
     });
 
-    console.log("Tablas y datos listos.");
+    function insertarTiposDesastre() {
+        db.get("SELECT COUNT(*) as count FROM tipos_desastre", (err, row) => {
+            if (row.count === 0) {
+                console.log("Insertando tipos de desastre...");
+                const stmt = db.prepare("INSERT INTO tipos_desastre (nombre, icono, nivel_riesgo) VALUES (?, ?, ?)");
+                stmt.run("Huracán", "🌀", "Alto");
+                stmt.run("Sismo", "🌎", "Alto");
+                stmt.run("Inundación", "🌊", "Alto");
+                stmt.run("Sequía e Incendio", "🔥", "Medio");
+                stmt.run("Actividad Volcánica", "🌋", "Medio");
+                stmt.finalize(() => {
+                    console.log("Tipos de desastre insertados.");
+                    insertarAlertasActivas();
+                });
+            } else {
+                insertarAlertasActivas();
+            }
+        });
+    }
+
+    function insertarAlertasActivas() {
+        db.get("SELECT COUNT(*) as count FROM alertas_activas", (err, row) => {
+            if (row.count > 0) {
+                console.log("Las alertas ya existen. No se insertarán duplicados.");
+                return;
+            }
+            console.log("Insertando alertas activas para los 32 estados...");
+
+            // Mapa de riesgo principal por estado (basado en la clasificación proporcionada)
+            const riesgoPorEstado = {
+                // Huracanes (Pacífico y Atlántico)
+                "Baja California Sur": "Huracán",
+                "Sinaloa": "Huracán",
+                "Nayarit": "Huracán",
+                "Jalisco": "Huracán",
+                "Colima": "Huracán",
+                "Michoacán": "Huracán",
+                "Guerrero": "Huracán",
+                "Oaxaca": "Huracán",  // También sismos, pero prevalece huracán en costa
+                "Chiapas": "Huracán",
+                "Quintana Roo": "Huracán",
+                "Yucatán": "Huracán",
+                "Campeche": "Huracán",
+                "Tabasco": "Huracán",
+                "Veracruz": "Huracán",
+                "Tamaulipas": "Huracán",
+                // Sismos (zonas de alta sismicidad)
+                "Ciudad de México": "Sismo",
+                "Estado de México": "Sismo",
+                "Puebla": "Sismo",
+                "Morelos": "Sismo",
+                // Inundaciones (estados con mayor riesgo)
+                // Ya algunos están en huracanes, pero Tabasco y Veracruz tienen doble riesgo; dejamos huracán
+                // Sequías e incendios (norte)
+                "Chihuahua": "Sequía e Incendio",
+                "Coahuila": "Sequía e Incendio",
+                "Sonora": "Sequía e Incendio",
+                "Durango": "Sequía e Incendio",
+                "Nuevo León": "Sequía e Incendio",
+                "Zacatecas": "Sequía e Incendio",
+                "San Luis Potosí": "Sequía e Incendio",
+                "Baja California": "Sequía e Incendio",
+                // Actividad volcánica
+                "Tlaxcala": "Actividad Volcánica",
+                // Otros estados con sismos
+                "Aguascalientes": "Sismo",
+                "Guanajuato": "Sismo",
+                "Hidalgo": "Sismo",
+                "Querétaro": "Sismo"
+            };
+
+            // Descripciones específicas por tipo
+            const descripciones = {
+                "Huracán": "Temporada de huracanes activa (mayo-noviembre). Posibles vientos fuertes y lluvias torrenciales. Ubique refugios y asegure documentos.",
+                "Sismo": "Zona sísmica activa. Impredecible. Participe en simulacros y tenga lista mochila de emergencia.",
+                "Inundación": "Riesgo de inundaciones por lluvias intensas. Evite cruzar corrientes y ubique rutas a zonas altas.",
+                "Sequía e Incendio": "Temporada de estiaje (marzo-junio). Alto riesgo de incendios forestales. Racionalice agua y evite fogatas.",
+                "Actividad Volcánica": "Actividad volcánica en monitoreo. Posible caída de ceniza. Cubra depósitos de agua y use cubrebocas."
+            };
+
+            // Obtener todos los estados y tipos de desastre
+            db.all("SELECT id, nombre FROM estados", [], (err, estados) => {
+                if (err) { console.error(err); return; }
+                db.all("SELECT id, nombre FROM tipos_desastre", [], (err, tipos) => {
+                    if (err) { console.error(err); return; }
+
+                    const tipoMap = {};
+                    tipos.forEach(t => tipoMap[t.nombre] = t.id);
+
+                    const stmt = db.prepare("INSERT INTO alertas_activas (estado_id, tipo_desastre_id, descripcion) VALUES (?, ?, ?)");
+                    estados.forEach(estado => {
+                        const tipoNombre = riesgoPorEstado[estado.nombre] || "Sismo"; // Por defecto sismo
+                        const tipoId = tipoMap[tipoNombre];
+                        if (tipoId) {
+                            const desc = descripciones[tipoNombre] || "Manténgase informado por canales oficiales.";
+                            stmt.run(estado.id, tipoId, desc);
+                        }
+                    });
+                    stmt.finalize(() => {
+                        console.log("Alertas activas insertadas para todos los estados.");
+                    });
+                });
+            });
+        });
+    }
+
+    console.log("Inicialización de base de datos completada.");
 });
 
 module.exports = db;
