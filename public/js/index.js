@@ -27,7 +27,11 @@ async function planificarViaje() {
             console.log("No se pudo detectar la ubicación de origen.");
         }
 
+<<<<<<< HEAD
 
+=======
+        // 2. ALERTAS DE DESASTRES
+>>>>>>> 97b4a2824ab66b1d076e206a875a624822e1c6cb
         try {
             const listaAlertas = document.getElementById('lista-alertas');
             listaAlertas.innerHTML = "<p>Buscando alertas...</p>";
@@ -51,7 +55,7 @@ async function planificarViaje() {
         
         if (climaDestinoRes.status === 'fulfilled' && climaDestinoRes.value.main) {
             tempDestino = climaDestinoRes.value.main.temp;
-            const descripcion = climaDestinoRes.value.weather.description;
+            const descripcion = climaDestinoRes.value.weather[0].description;
             
             let htmlClima = `
                 <p><strong>Temperatura:</strong> ${tempDestino}°C</p>

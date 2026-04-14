@@ -63,12 +63,12 @@ const DesastresModel = {
                 FROM alertas_activas a
                 JOIN estados e ON a.estado_id = e.id
                 JOIN tipos_desastre t ON a.tipo_desastre_id = t.id
-                WHERE a.fecha_fin IS NULL OR a.fecha_fin > datetime('now')
+                WHERE (a.fecha_fin IS NULL OR a.fecha_fin > datetime('now'))
             `;
             let params = [];
             
             if (estado) {
-                // AQUI ESTÁ LA MAGIA: Agregamos la búsqueda por capital
+                // AQUI ESTÁ LA MAGIA: Agregamos la búsqueda por clave, nombre o capital
                 query += ` AND (e.clave = ? OR e.nombre LIKE ? OR e.capital LIKE ?)`;
                 params = [estado, `%${estado}%`, `%${estado}%`];
             }

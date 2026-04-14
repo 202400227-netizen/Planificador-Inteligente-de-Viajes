@@ -5,12 +5,12 @@ const path = require('path');
 const db = require('./src/routes/database'); 
 require('dotenv').config();
 
-const desastresRoutes = require('./api-desastres/routes/desastres');
+const desastresRoutes = require('./src/routes/desastres');
 
 const app = express();
 
 app.use(cors());
-app.use(express.json()); 
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
@@ -57,6 +57,10 @@ app.get('/api/videos', async (req, res) => {
     }
 });
 
+<<<<<<< HEAD
+=======
+// 5. MAPAS (Google Geocoding)
+>>>>>>> 97b4a2824ab66b1d076e206a875a624822e1c6cb
 app.get('/api/coordenadas', async (req, res) => {
     const { ciudad } = req.query;
     try {
@@ -115,7 +119,6 @@ app.delete('/api/itinerarios/:id', (req, res) => {
 
 
 app.use('/api/desastres', desastresRoutes);
-app.use('/api-desastres', express.static(path.join(__dirname, 'api-desastres', 'public')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
