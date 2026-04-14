@@ -13,7 +13,6 @@ async function planificarViaje() {
     try {
         console.log(`Buscando información para: ${ciudadDestino}...`);
 
-        // 1. OBTENER GEOLOCALIZACIÓN
         let nombreOrigenParaHistorial = "Ubicación desconocida";
         let ciudadOrigenDetectada = null;
 
@@ -28,8 +27,7 @@ async function planificarViaje() {
             console.log("No se pudo detectar la ubicación de origen.");
         }
 
-        // 2. ALERTAS DE DESASTRES (CORREGIDO)
-        // Asegúrate de que en tu archivo desastres.js la función se llame buscarDesastres
+
         try {
             const listaAlertas = document.getElementById('lista-alertas');
             listaAlertas.innerHTML = "<p>Buscando alertas...</p>";
@@ -39,7 +37,7 @@ async function planificarViaje() {
             document.getElementById('lista-alertas').innerHTML = "<p class='texto-vacio'>No se pudieron cargar las alertas.</p>";
         }
 
-        // 3. LLAMADAS A LAS APIs RESTANTES
+        // 3. LLAMADOS A
         const [climaDestinoRes, noticiasRes, videosRes, climaOrigenRes] = await Promise.allSettled([
             fetch(`/api/clima?ciudad=${ciudadDestino}`).then(res => res.json()),
             fetch(`/api/noticias?ciudad=${ciudadDestino}`).then(res => res.json()),

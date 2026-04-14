@@ -14,7 +14,7 @@ db.serialize(() => {
         fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Tablas de Desastres
+    // Tablas de los estrados
     db.run(`CREATE TABLE IF NOT EXISTS estados (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre TEXT NOT NULL, 
